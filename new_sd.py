@@ -88,7 +88,7 @@ def main():
 
     logger.info("==> Done!\n")
 
-    # args.evaluate = True
+    args.evaluate = True
     if args.evaluate:
         with torch.no_grad():
             print("eval mode!!!!!!!!")

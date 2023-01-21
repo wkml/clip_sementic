@@ -1,5 +1,5 @@
 #!/bin/bash
-post='new_SD-exp2.1-sd_preprompt'
+post='new_SD-exp3.0-init'
 backbone_name='RN101'
 dataset='COCO'
 train_data_dir='/data/public/coco2014/train2014'
@@ -9,10 +9,10 @@ test_list='/data/public/coco2014/annotations/instances_val2014.json'
 category_file='./data/coco/category_name.json'
 
 num_classes=80
-batch_size=64
+batch_size=128
 epochs=20
 
-learning_rate=0.2
+learning_rate=0.002
 momentum=0.9
 weight_decay=0
 

@@ -119,9 +119,9 @@ class AttentionPool2d(nn.Module):
             need_weights=False
         )
 
-        global_map = x[0]
-        feature_map = x[1:].permute(1, 0, 2)
-        return feature_map, global_map
+        # global_map = x[0]
+        # feature_map = x[1:].permute(1, 0, 2)
+        return x.permute(1, 0, 2)
 
 
 
