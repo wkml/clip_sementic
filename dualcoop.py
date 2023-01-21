@@ -14,7 +14,7 @@ from utils.loss import AsymmetricLoss_partial, ranking_loss
 from utils.transforms import get_train_test_set
 from utils.metrics import AverageMeter, AveragePrecisionMeter, Compute_mAP_VOC2012
 # from model.coop import DenseCLIP
-from model.new_sd import DenseCLIP
+from model.dualcoop import DenseCLIP
 from utils.checkpoint import save_checkpoint
 
 from tensorboardX import SummaryWriter
@@ -63,22 +63,16 @@ def main():
         p.requires_grad = False
     for p in model.prompt_learner.parameters():
         p.requires_grad = True
-    # for p in model.local_head.parameters():
-    #     p.requires_grad = True
-    # for p in model.local_head2.parameters():
-    #     p.requires_grad = True
 
-    # criterion = AsymmetricLoss_partial(gamma_neg=2, gamma_pos=1, clip=0.05).to(device)
-    # criterion = nn.BCEWithLogitsLoss(reduce=True, size_average=True)
     criterion = ranking_loss
-    optimizer = torch.optim.AdamW(filter(lambda p: p.requires_grad, model.parameters()), lr=args.lr, weight_decay=args.weight_decay)
-    # optimizer = torch.optim.SGD(filter(lambda p : p.requires_grad, model.parameters()),
-    #                             lr=args.lr,
-    #                             momentum=args.momentum, 
-    #                             weight_decay=args.weight_decay,
-    #                             nesterov=False)
+    # optimizer = torch.optim.AdamW(filter(lambda p: p.requires_grad, model.parameters()), lr=args.lr, weight_decay=args.weight_decay)
+    optimizer = torch.optim.SGD(filter(lambda p : p.requires_grad, model.parameters()),
+                                lr=args.lr,
+                                momentum=args.momentum, 
+                                weight_decay=args.weight_decay,
+                                nesterov=False)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, float(args.epochs))
-    scheduler = ConstantWarmupScheduler(optimizer, scheduler, 0, 1e-5)
+    scheduler = ConstantWarmupScheduler(optimizer, scheduler, 1, 1e-5)
 
     if args.resume:
         if os.path.isfile(args.resume):
@@ -144,13 +138,13 @@ def train(train_loader, model, criterion, optimizer, epoch, args, writer):
         input, target = input.to(device), target.float().to(device)
 
         # compute output
-        output = model(input)
+        _, output, _, _ = model(input)
         loss = criterion(output, target)
         losses.update(loss.data, input.size(0))
 
         # compute gradient and do SGD step
         optimizer.zero_grad()
-        loss.backward(retain_graph=True)
+        loss.backward()
         optimizer.step()
  
         # measure elapsed time
@@ -179,7 +173,7 @@ def validate(val_loader, model, criterion, args):
     for i, (input, target) in enumerate(val_loader):
         input, target = input.to(device), target.float().to(device)
 
-        output = model(input)
+        _, output, _, _ = model(input)
         loss = criterion(output, target)
         losses.update(loss.data, input.size(0))
 

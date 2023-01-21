@@ -16,7 +16,6 @@ class TextEncoder(nn.Module):
         self.dtype = clip_model.dtype
 
     def forward(self, prompts, tokenized_prompts):
-        # TODO
         x = prompts + self.positional_embedding.type(self.dtype)  # (1, 77, 512)
         x = x.permute(1, 0, 2)  # NLD -> LND
         x = self.transformer(x)
@@ -53,21 +52,16 @@ class PromptLearner(nn.Module):
             if args.csc:
                 print("Initializing class-specific contexts")
                 ctx_vectors = torch.empty(n_cls, n_ctx, ctx_dim, dtype=dtype)
-                ctx_vectors_neg = torch.empty(n_cls, n_ctx, ctx_dim, dtype=dtype)
             else:
                 print("Initializing a generic context")
                 ctx_vectors = torch.empty(n_ctx, ctx_dim, dtype=dtype)
-                ctx_vectors_neg = torch.empty(n_ctx, ctx_dim, dtype=dtype)
             nn.init.normal_(ctx_vectors, std=0.02)
-            nn.init.normal_(ctx_vectors_neg, std=0.02)
             prompt_prefix = " ".join(["X"] * n_ctx)
 
         print(f'Initial context: "{prompt_prefix}"')
-        print(f'Initial negtive context: "{prompt_prefix}"')
         print(f"Number of context words (tokens): {n_ctx}")
 
         self.ctx = nn.Parameter(ctx_vectors)  # to be optimized
-        self.ctx_global = nn.Parameter(ctx_vectors_neg)  # to be optimized
         
         temperature = torch.tensor(3.91, dtype=dtype)  # 50
         self.temperature = nn.Parameter(temperature)
@@ -87,14 +81,7 @@ class PromptLearner(nn.Module):
         # those computed using the current class names
         self.register_buffer("token_prefix", embedding[:, :1, :])  # SOS
         self.register_buffer("token_suffix", embedding[:, 1 + n_ctx :, :])  # CLS, EOS
-
-        # class agnostic token suffix
-        prompts_nocls = [prompt_prefix + "."] * len(classnames)
-        tokenized_prompts_nocls = torch.cat([clip.tokenize(p) for p in prompts_nocls])
-        with torch.no_grad():
-            embedding_nocls = clip_model.token_embedding(tokenized_prompts_nocls).type(dtype)
-        self.register_buffer("token_suffix_nocls", embedding_nocls[:, 1 + n_ctx :, :])  # EOS
-
+        
         self.n_cls = n_cls
         self.n_ctx = n_ctx
         self.tokenized_prompts = tokenized_prompts  # torch.Tensor
@@ -106,14 +93,11 @@ class PromptLearner(nn.Module):
         Returns current learned ctx embeddings, concated with cls word embeddings.
         """
         ctx = self.ctx
-        ctx_global = self.ctx_global
         if ctx.dim() == 2:
             ctx = ctx.unsqueeze(0).expand(self.n_cls, -1, -1)
-            ctx_global = ctx_global.unsqueeze(0).expand(self.n_cls, -1, -1)
 
         prefix = self.token_prefix
         suffix = self.token_suffix
-        suffix_nocls = self.token_suffix_nocls
 
         if self.class_token_position == "end":
             prompts = torch.cat(
@@ -124,24 +108,6 @@ class PromptLearner(nn.Module):
                 ],
                 dim=1,
             )
-            if neg_prompt_wcls:
-                prompts_global = torch.cat(
-                    [
-                        prefix,  # (n_cls, 1, dim)
-                        ctx_global,     # (n_cls, n_ctx, dim)
-                        suffix,  # (n_cls, *, dim)
-                    ],
-                    dim=1,
-                )
-            else:
-                prompts_global = torch.cat(
-                    [
-                        prefix,  # (n_cls, 1, dim)
-                        ctx_global,     # (n_cls, n_ctx, dim)
-                        suffix_nocls,  # (n_cls, *, dim)
-                    ],
-                    dim=1,
-                )
 
 
         elif self.class_token_position == "middle":
@@ -190,4 +156,4 @@ class PromptLearner(nn.Module):
         else:
             raise ValueError
 
-        return prompts, prompts_global, self.temperature, self.spatial_T
+        return prompts, self.temperature, self.spatial_T

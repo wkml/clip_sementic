@@ -100,3 +100,12 @@ class AsymmetricLoss_partial(nn.Module):
             loss *= one_sided_w
 
         return -loss.sum() / x.shape[0] if if_partial else -loss.mean()
+
+def ranking_loss(y_pred, y_true, scale_ = 2.0, margin_ = 1):
+    y_true_ = y_true.float()
+    tmp = margin_ - y_pred[:, None, :] + y_pred[:, :, None]
+    partial_losses = torch.maximum(torch.zeros_like(tmp), tmp)
+    loss = partial_losses * y_true_[:, None, :] * (1 - y_true_[:, :, None])
+    loss = torch.sum(loss, dim=-1)
+    loss = torch.sum(loss, dim=-1)
+    return torch.mean(loss)

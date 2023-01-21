@@ -57,7 +57,7 @@ def arg_parse():
     parser.add_argument('--scale_size', dest = 'scale_size',default=448, type=int,
                         help='the size of the rescale image')
     parser.add_argument('--evaluate', action='store_true', help='evaluate model on validation set')
-    parser.add_argument('--post', dest='post', type=str,default='',
+    parser.add_argument('--post', dest='post', type=str, default='',
                         help='postname of save model')
     parser.add_argument('--num_classes', default=80, type=int, metavar='N',
                         help='number of classes (default: 80)')
@@ -67,7 +67,7 @@ def arg_parse():
                         help='class name of datasets')
     parser.add_argument('--n_ctx', default=16, type=int,
                         help='nums of context')
-    parser.add_argument('--ctx_init', action='store_true', default=False,
+    parser.add_argument('--ctx_init',dest='ctx_init', default='', type=str,
                         help='init context')
     parser.add_argument('--csc', action='store_true', default=False,
                         help='class special context')

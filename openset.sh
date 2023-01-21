@@ -1,6 +1,5 @@
 #!/bin/bash
-# post='new_SD-exp3.3-cat_global_untrain_local_prompt'
-post='coop2-train'
+post='new_SD-exp3.1-cat_global_local'
 backbone_name='RN101'
 dataset='COCO'
 train_data_dir='/data/public/coco2014/train2014'
@@ -13,7 +12,7 @@ num_classes=80
 batch_size=256
 epochs=20
 
-learning_rate=0.0002
+learning_rate=0.001
 momentum=0.9
 weight_decay=0.005
 
@@ -30,7 +29,7 @@ print_freq=50
 
 
 N_CTX=16
-CTX_INIT=""
+# CTX_INIT=
 CLASS_TOKEN_POSITION=end
 
 cuda=0
@@ -55,4 +54,4 @@ CUDA_VISIBLE_DEVICES=${cuda} python new_sd.py \
 --backbone_name ${backbone_name} \
 --class_token_position ${CLASS_TOKEN_POSITION} \
 --n_ctx ${N_CTX} \
-#--ctx_init ${CTX_INIT}
+--openset \

@@ -38,12 +38,12 @@ def main():
     args.backbone_name = 'RN101'
     args.crop_size = 448
     args.n_ctx = 16
-    args.ctx_init = ''
+    args.ctx_init = 'In the scene there is a'
     args.csc = False
     args.class_token_position = 'end'
 
     model = DenseCLIP(args=args, classnames=name)
-    checkpoint = torch.load("exp/checkpoint/new_SD-exp2.1-sd_preprompt/Checkpoint_Best.pth", map_location='cpu')
+    checkpoint = torch.load("exp/checkpoint/new_SD-exp3.2-cat_global_local_prompt/Checkpoint_Best.pth", map_location='cpu')
     model.load_state_dict(checkpoint['state_dict'])
     root = '/data/public/coco2014/val2014'
     test_list = '/data/public/coco2014/annotations/instances_val2014.json'
