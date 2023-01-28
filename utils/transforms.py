@@ -5,6 +5,8 @@ from datasets.voc12dataset import Voc12Dataset
 import torchvision.transforms as transforms
 from torch.utils.data import DataLoader
 import os
+from utils.autoaugment import MLC_Policy
+
 def get_train_test_set(train_dir, test_dir, train_anno, test_anno,args = None):
     print('You will perform multi-scale on images for scale 640')
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
@@ -18,6 +20,7 @@ def get_train_test_set(train_dir, test_dir, train_anno, test_anno,args = None):
                                                transforms.RandomCrop(384),
                                                transforms.RandomCrop(320),
                                                transforms.RandomCrop(256),]),
+                                               MLC_Policy(),
                                                transforms.Resize((crop_size, crop_size)),
                                                transforms.ToTensor(),
                                                normalize])

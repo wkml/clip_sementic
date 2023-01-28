@@ -1,6 +1,6 @@
 #!/bin/bash
 # post='new_SD-exp3.3-cat_global_untrain_local_prompt'
-post='dualcoop_2-train-asl'
+post='base_bese_sd-exp1.0-lr4e-3-rl'
 backbone_name='RN101'
 dataset='COCO'
 train_data_dir='/data/public/coco2014/train2014'
@@ -13,9 +13,9 @@ num_classes=80
 batch_size=256
 epochs=20
 
-learning_rate=0.002
+learning_rate=0.0004
 momentum=0.9
-weight_decay=0
+weight_decay=0.005
 
 #input parameter
 crop_size=448
@@ -33,7 +33,7 @@ CTX_INIT=""
 CLASS_TOKEN_POSITION=end
 
 cuda=0
-CUDA_VISIBLE_DEVICES=${cuda} python dualcoop.py \
+CUDA_VISIBLE_DEVICES=${cuda} python learnable_sd.py \
 --dataset ${dataset} \
 --train_data ${train_data_dir} \
 --test_data ${test_data_dir} \

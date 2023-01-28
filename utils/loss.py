@@ -53,7 +53,7 @@ class AsymmetricLoss(nn.Module):
         return loss
 
 class AsymmetricLoss_partial(nn.Module):
-    def __init__(self, gamma_neg=4, gamma_pos=1, clip=0.05, eps=1e-8, disable_torch_grad_focal_loss=True):
+    def __init__(self, gamma_neg=2, gamma_pos=1, clip=0.05, eps=1e-8, disable_torch_grad_focal_loss=True):
         super(AsymmetricLoss_partial, self).__init__()
 
         self.gamma_neg = gamma_neg

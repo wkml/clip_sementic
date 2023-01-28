@@ -14,7 +14,7 @@ from utils.loss import AsymmetricLoss_partial, ranking_loss
 from utils.transforms import get_train_test_set
 from utils.metrics import AverageMeter, AveragePrecisionMeter, Compute_mAP_VOC2012
 # from model.coop import DenseCLIP
-from model.dualcoop import DenseCLIP
+from model.learnable_sd import DenseCLIP
 from utils.checkpoint import save_checkpoint
 
 from tensorboardX import SummaryWriter
@@ -61,17 +61,19 @@ def main():
 
     for p in model.parameters():
         p.requires_grad = False
-    for p in model.prompt_learner.parameters():
+    for p in model.fc.parameters():
+        p.requires_grad = True
+    for p in model.word_semantic.parameters():
         p.requires_grad = True
 
     criterion = ranking_loss
     # criterion = AsymmetricLoss_partial()
-    # optimizer = torch.optim.AdamW(filter(lambda p: p.requires_grad, model.parameters()), lr=args.lr, weight_decay=args.weight_decay)
-    optimizer = torch.optim.SGD(filter(lambda p : p.requires_grad, model.parameters()),
-                                lr=args.lr,
-                                momentum=args.momentum, 
-                                weight_decay=args.weight_decay,
-                                nesterov=False)
+    optimizer = torch.optim.AdamW(filter(lambda p: p.requires_grad, model.parameters()), lr=args.lr, weight_decay=args.weight_decay)
+    # optimizer = torch.optim.SGD(filter(lambda p : p.requires_grad, model.parameters()),
+    #                             lr=args.lr,
+    #                             momentum=args.momentum, 
+    #                             weight_decay=args.weight_decay,
+    #                             nesterov=False)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, float(args.epochs))
     scheduler = ConstantWarmupScheduler(optimizer, scheduler, 1, 1e-5)
 
@@ -221,4 +223,3 @@ def validate(val_loader, model, criterion, args):
 
 if __name__=="__main__":
     main()
-
